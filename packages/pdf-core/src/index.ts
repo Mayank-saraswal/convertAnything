@@ -1,0 +1,11 @@
+export { mergePdfs } from "./merge";
+export { splitPdf, extractPages } from "./split";
+export { rotatePdf } from "./rotate";
+export { addWatermark } from "./watermark";
+export { compressPdf } from "./compress";
+export { pdfToImages } from "./pdf-to-image";
+export { imagesToPdf } from "./image-to-pdf";
+export { pdfToWord, wordToPdf } from "./convert";
+export { unlockPdf } from "./unlock";
+export { validateFileType, validateFileSize, detectFileType } from "./validate";
+export type { ProcessingResult, MultiFileResult } from "./types";

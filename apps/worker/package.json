@@ -1,0 +1,28 @@
+{
+  "name": "@repo/worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "dotenv -e ../../.env -- tsx watch ./src/index.ts",
+    "build": "tsup"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*",
+    "dotenv-cli": "^11.0.0",
+    "tsup": "^8.5.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@repo/database": "workspace:*",
+    "@repo/logger": "workspace:*",
+    "@repo/pdf-core": "workspace:*",
+    "@repo/queue": "workspace:*",
+    "@repo/storage": "workspace:*",
+    "bullmq": "^5.34.0",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.1",
+    "ioredis": "^5.6.0"
+  }
+}
