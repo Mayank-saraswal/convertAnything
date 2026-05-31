@@ -5,7 +5,9 @@ export async function processWatermark(
   options?: Record<string, unknown>
 ) {
   const result = await addWatermark(inputBuffers[0]!, {
-    text: (options?.text as string) || "WATERMARK",
+    type: (options?.type as "text" | "image") || "text",
+    text: (options?.text as string) || "CONFIDENTIAL",
+    imageBase64: options?.imageBase64 as string | undefined,
     fontSize: (options?.fontSize as number) || 48,
     opacity: (options?.opacity as number) || 0.3,
     position:
@@ -17,6 +19,7 @@ export async function processWatermark(
         | "bottom-right") || "center",
     rotation: (options?.rotation as number) || -45,
     color: (options?.color as string) || "#000000",
+    imageScale: (options?.imageScale as number) || 0.5,
   });
 
   return {

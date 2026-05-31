@@ -1,6 +1,6 @@
 import { Worker, Job } from "bullmq";
 import { getRedisConnection, QUEUE_NAMES } from "@repo/queue";
-import { downloadFromR2, uploadToR2 } from "@repo/storage";
+import { downloadBuffer, uploadBuffer } from "@repo/storage";
 import { db, eq } from "@repo/database";
 import { jobsTable } from "@repo/database/schema";
 import { logger } from "@repo/logger";
@@ -17,6 +17,7 @@ import { processImageToPdf } from "./processors/image-to-pdf.processor";
 import { processPdfToWord } from "./processors/pdf-to-word.processor";
 import { processWordToPdf } from "./processors/word-to-pdf.processor";
 import { processUnlock } from "./processors/unlock.processor";
+import { processSign } from "./processors/sign.processor";
 
 // Processor registry
 const processors: Record<
@@ -36,6 +37,7 @@ const processors: Record<
   pdf_to_word: processPdfToWord,
   word_to_pdf: processWordToPdf,
   unlock: processUnlock,
+  sign: processSign,
 };
 
 /**
@@ -57,9 +59,9 @@ export function startWorker(concurrency: number = 5): Worker<PdfJobPayload> {
           .set({ status: "processing" })
           .where(eq(jobsTable.id, jobId));
 
-        // Download input files from R2
+        // Download input files from DO Spaces
         const inputBuffers = await Promise.all(
-          inputKeys.map((key) => downloadFromR2(key))
+          inputKeys.map((key) => downloadBuffer(key))
         );
 
         // Find and run the appropriate processor
@@ -70,9 +72,9 @@ export function startWorker(concurrency: number = 5): Worker<PdfJobPayload> {
 
         const result = await processor(inputBuffers, options);
 
-        // Upload output to R2
+        // Upload output to DO Spaces
         const outputKey = `outputs/${jobId}/${result.filename}`;
-        await uploadToR2(outputKey, result.buffer, result.mimeType);
+        await uploadBuffer(outputKey, result.buffer, result.mimeType);
 
         // Update job as completed
         await db

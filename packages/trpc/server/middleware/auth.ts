@@ -8,6 +8,11 @@ export const rateLimitMiddleware = (
   maxPremium: number
 ) =>
   middleware(async ({ ctx, next }) => {
+    // Skip rate limiting in development
+    if (process.env.NODE_ENV === "development") {
+      return next({ ctx });
+    }
+
     // Determine identifier (user ID or IP)
     const identifier =
       ctx.userId ||

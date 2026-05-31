@@ -101,12 +101,12 @@ export function FileUploader({
           or drag & drop files here
         </p>
 
-        <div className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40">
+        <div className="rounded-full bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-gray-900">
           Choose Files
         </div>
 
         <p className="mt-3 text-xs text-muted-foreground">
-          Max {tool.maxFiles} file{tool.maxFiles > 1 ? "s" : ""} • 10MB per file (free)
+          Max {tool.maxFiles} file{tool.maxFiles > 1 ? "s" : ""} • 100MB per file (free)
         </p>
 
         <input

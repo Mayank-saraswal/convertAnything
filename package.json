@@ -20,6 +20,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@clerk/express": "^2.1.22",
     "dotenv-cli": "^11.0.0"
   }
 }

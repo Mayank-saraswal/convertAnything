@@ -15,34 +15,37 @@ export async function pdfToWord(
 ): Promise<ProcessingResult> {
   const tempDir = await mkdtemp(join(tmpdir(), "ca-pdf2word-"));
   const inputPath = join(tempDir, "input.pdf");
+  const outputPath = join(tempDir, "output.docx");
+  const pythonScriptPath = join(__dirname, "python", "pdf2docx_converter.py");
 
   try {
     await writeFile(inputPath, pdfBuffer);
 
-    await execFileAsync("soffice", [
-      "--headless",
-      "--convert-to",
-      "docx",
-      "--outdir",
-      tempDir,
-      inputPath,
-    ]);
-
-    // Find the generated docx file
-    const files = await readdir(tempDir);
-    const docxFile = files.find((f) => f.endsWith(".docx"));
-    if (!docxFile) {
-      throw new Error("LibreOffice failed to generate DOCX output");
+    try {
+      await execFileAsync("python", [
+        pythonScriptPath,
+        inputPath,
+        outputPath,
+      ]);
+    } catch (error: any) {
+      if (error.code === "ENOENT") {
+        throw new Error("Python is not installed or not in system PATH.");
+      }
+      throw new Error("Failed to convert PDF to Word using Python pdf2docx.");
     }
 
-    const outputBuffer = await readFile(join(tempDir, docxFile));
-
-    return {
-      buffer: outputBuffer,
-      filename: "converted.docx",
-      mimeType:
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    };
+    // Check if the generated docx file exists
+    try {
+      const outputBuffer = await readFile(outputPath);
+      return {
+        buffer: outputBuffer,
+        filename: "converted.docx",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      };
+    } catch (e) {
+      throw new Error("Python failed to generate DOCX output");
+    }
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }
@@ -60,14 +63,38 @@ export async function wordToPdf(
   try {
     await writeFile(inputPath, docxBuffer);
 
-    await execFileAsync("soffice", [
-      "--headless",
-      "--convert-to",
-      "pdf",
-      "--outdir",
-      tempDir,
-      inputPath,
-    ]);
+    try {
+      await execFileAsync("soffice", [
+        "--headless",
+        "--convert-to",
+        "pdf",
+        "--outdir",
+        tempDir,
+        inputPath,
+      ]);
+    } catch (error: any) {
+      if (error.code === "ENOENT" && process.platform === "win32") {
+        try {
+          await execFileAsync("C:\\Program Files\\LibreOffice\\program\\soffice.exe", [
+            "--headless",
+            "--convert-to",
+            "pdf",
+            "--outdir",
+            tempDir,
+            inputPath,
+          ]);
+        } catch (fallbackError: any) {
+          if (fallbackError.code === "ENOENT") {
+            throw new Error("LibreOffice (soffice) is not installed or not in system PATH.");
+          }
+          throw fallbackError;
+        }
+      } else if (error.code === "ENOENT") {
+        throw new Error("LibreOffice (soffice) is not installed or not in system PATH.");
+      } else {
+        throw error;
+      }
+    }
 
     const files = await readdir(tempDir);
     const pdfFile = files.find((f) => f.endsWith(".pdf"));

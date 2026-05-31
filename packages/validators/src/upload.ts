@@ -12,8 +12,8 @@ export const ALLOWED_DOC_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ] as const;
 
-export const MAX_FILE_SIZE_FREE = 10 * 1024 * 1024; // 10MB
-export const MAX_FILE_SIZE_PREMIUM = 100 * 1024 * 1024; // 100MB
+export const MAX_FILE_SIZE_FREE = 100 * 1024 * 1024; // 100MB
+export const MAX_FILE_SIZE_PREMIUM = 500 * 1024 * 1024; // 500MB
 export const MAX_FILES_PER_JOB = 20;
 
 export const presignedUrlInputSchema = z.object({

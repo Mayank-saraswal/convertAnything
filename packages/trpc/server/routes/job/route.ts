@@ -1,5 +1,5 @@
 import { z } from "../../schema";
-import { sessionProcedure, protectedProcedure, router } from "../../trpc";
+import { publicProcedure, protectedProcedure, router } from "../../trpc";
 import {
   jobStatusInputSchema,
   jobDownloadInputSchema,
@@ -7,12 +7,12 @@ import {
 } from "@repo/validators";
 import { db, eq, desc } from "@repo/database";
 import { jobsTable } from "@repo/database/schema";
-import { getDownloadPresignedUrl } from "@repo/storage";
+import { generateDownloadPresignedUrl } from "@repo/storage";
 import { TRPCError } from "@trpc/server";
 
 export const jobRouter = router({
   /** Poll job status — anonymous or authenticated */
-  status: sessionProcedure
+  status: publicProcedure
     .input(jobStatusInputSchema)
     .query(async ({ input, ctx }) => {
       const jobs = await db
@@ -38,7 +38,7 @@ export const jobRouter = router({
     }),
 
   /** Get download URL for a completed job */
-  downloadUrl: sessionProcedure
+  downloadUrl: publicProcedure
     .input(jobDownloadInputSchema)
     .mutation(async ({ input }) => {
       const jobs = await db
@@ -59,9 +59,8 @@ export const jobRouter = router({
         });
       }
 
-      const downloadUrl = await getDownloadPresignedUrl(
-        job.outputFile,
-        3600 // 1 hour
+      const downloadUrl = await generateDownloadPresignedUrl(
+        job.outputFile
       );
 
       return { downloadUrl, filename: job.outputFile.split("/").pop() };

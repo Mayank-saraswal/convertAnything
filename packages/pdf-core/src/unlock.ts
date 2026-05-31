@@ -29,7 +29,30 @@ export async function unlockPdf(
     }
     args.push(inputPath, outputPath);
 
-    await execFileAsync("qpdf", args);
+    try {
+      await execFileAsync("qpdf", args);
+    } catch (error: any) {
+      if (error.code === "ENOENT" && process.platform === "win32") {
+        try {
+          await execFileAsync("C:\\qpdf\\qpdf-12.3.2-msvc64\\bin\\qpdf.exe", args);
+        } catch (fallbackError: any) {
+          if (fallbackError.code === "ENOENT") {
+            throw new Error("QPDF is not installed or not in system PATH.");
+          }
+          if (fallbackError.message?.includes("invalid password")) {
+            throw new Error("Incorrect or missing password for this PDF.");
+          }
+          throw fallbackError;
+        }
+      } else if (error.code === "ENOENT") {
+        throw new Error("QPDF is not installed or not in system PATH.");
+      } else {
+        if (error.message?.includes("invalid password")) {
+          throw new Error("Incorrect or missing password for this PDF.");
+        }
+        throw error;
+      }
+    }
 
     const outputBuffer = await readFile(outputPath);
 

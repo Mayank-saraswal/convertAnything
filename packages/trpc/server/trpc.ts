@@ -9,5 +9,13 @@ export const tRPCContext = initTRPC
   .create({});
 
 export const router = tRPCContext.router;
+export const middleware = tRPCContext.middleware;
 
 export const publicProcedure = tRPCContext.procedure;
+
+export const protectedProcedure = tRPCContext.procedure.use(({ ctx, next }) => {
+  if (!ctx.userId) {
+    throw new TRPCError({ code: "UNAUTHORIZED", message: "Sign in required" });
+  }
+  return next({ ctx: { ...ctx, userId: ctx.userId } });
+});

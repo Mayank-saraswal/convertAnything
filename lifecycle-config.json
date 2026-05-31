@@ -1,0 +1,16 @@
+{
+  "Rules": [
+    {
+      "ID": "delete-temp-uploads",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "uploads/" },
+      "Expiration": { "Days": 1 }
+    },
+    {
+      "ID": "delete-outputs",
+      "Status": "Enabled",
+      "Filter": { "Prefix": "outputs/" },
+      "Expiration": { "Days": 1 }
+    }
+  ]
+}

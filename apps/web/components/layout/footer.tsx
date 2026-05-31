@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { TOOLS } from "~/lib/seo";
+import { TOOLS, IconMap } from "~/lib/seo";
 
 export function Footer() {
   return (
@@ -9,11 +9,11 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-bold text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-sm font-bold text-white">
                 C
               </div>
               <span className="text-lg font-bold">
-                Convert<span className="text-indigo-500">Anything</span>
+                Convert<span className="text-gray-500">Anything</span>
               </span>
             </Link>
             <p className="text-sm text-muted-foreground">
@@ -28,16 +28,20 @@ export function Footer() {
               PDF Tools
             </h3>
             <ul className="space-y-2">
-              {TOOLS.slice(0, 5).map((tool) => (
-                <li key={tool.slug}>
-                  <Link
-                    href={`/${tool.slug}`}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {tool.icon} {tool.h1}
-                  </Link>
-                </li>
-              ))}
+              {TOOLS.slice(0, 5).map((tool) => {
+                const Icon = IconMap[tool.icon];
+                return (
+                  <li key={tool.slug}>
+                    <Link
+                      href={`/${tool.slug}`}
+                      className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {Icon && <Icon className="h-4 w-4" />} 
+                      {tool.h1}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 
@@ -47,16 +51,20 @@ export function Footer() {
               More Tools
             </h3>
             <ul className="space-y-2">
-              {TOOLS.slice(5).map((tool) => (
-                <li key={tool.slug}>
-                  <Link
-                    href={`/${tool.slug}`}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {tool.icon} {tool.h1}
-                  </Link>
-                </li>
-              ))}
+              {TOOLS.slice(5).map((tool) => {
+                const Icon = IconMap[tool.icon];
+                return (
+                  <li key={tool.slug}>
+                    <Link
+                      href={`/${tool.slug}`}
+                      className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {Icon && <Icon className="h-4 w-4" />} 
+                      {tool.h1}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
 

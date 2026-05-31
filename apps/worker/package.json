@@ -23,6 +23,7 @@
     "bullmq": "^5.34.0",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
-    "ioredis": "^5.6.0"
+    "ioredis": "^5.6.0",
+    "pdf-lib": "^1.17.1"
   }
 }

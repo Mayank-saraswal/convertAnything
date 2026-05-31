@@ -1,8 +1,7 @@
-import { db, eq, sql } from "@repo/database";
-import { rateLimitsTable } from "@repo/database/schema";
+import { getRedisConnection } from "@repo/queue";
 
 /**
- * Simple database-backed rate limiter.
+ * Simple Redis-backed rate limiter.
  * @param identifier IP or User ID
  * @param endpoint Endpoint name
  * @param limit Max requests per window
@@ -14,47 +13,22 @@ export async function checkRateLimit(
   limit: number,
   windowMs: number
 ): Promise<boolean> {
-  const now = new Date();
-  const windowStart = new Date(now.getTime() - windowMs);
-
-  // Clean up old limits
-  await db
-    .delete(rateLimitsTable)
-    .where(
-      sql`${rateLimitsTable.identifier} = ${identifier} AND ${rateLimitsTable.endpoint} = ${endpoint} AND ${rateLimitsTable.windowStart} < ${windowStart}`
-    );
-
-  // Get or create limit record
-  const existing = await db
-    .select()
-    .from(rateLimitsTable)
-    .where(
-      sql`${rateLimitsTable.identifier} = ${identifier} AND ${rateLimitsTable.endpoint} = ${endpoint}`
-    )
-    .limit(1);
-
-  if (existing.length === 0) {
-    await db.insert(rateLimitsTable).values({
-      identifier,
-      endpoint,
-      count: 1,
-      windowStart: now,
-    });
-    return true;
-  }
-
-  const record = existing[0]!;
-
-  if (record.count >= limit) {
+  const redis = getRedisConnection();
+  const key = `ratelimit:${endpoint}:${identifier}`;
+  
+  const current = await redis.get(key);
+  
+  if (current && parseInt(current, 10) >= limit) {
     return false;
   }
-
-  await db
-    .update(rateLimitsTable)
-    .set({
-      count: record.count + 1,
-    })
-    .where(eq(rateLimitsTable.id, record.id));
-
+  
+  const multi = redis.multi();
+  multi.incr(key);
+  if (!current) {
+    multi.pexpire(key, windowMs);
+  }
+  
+  await multi.exec();
+  
   return true;
 }

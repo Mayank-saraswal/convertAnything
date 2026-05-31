@@ -19,7 +19,7 @@ export const tempFilesTable = pgTable(
     }),
 
     // Storage
-    storageKey: text("storage_key").notNull(), // R2 key or local path
+    azureBlobKey: text("azure_blob_key").notNull(), // Azure Blob Storage key
     filename: text("filename").notNull(),
     mimeType: text("mime_type").notNull(),
     sizeBytes: integer("size_bytes").notNull(),

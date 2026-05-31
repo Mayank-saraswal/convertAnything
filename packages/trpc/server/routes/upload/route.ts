@@ -1,36 +1,34 @@
 import { z } from "../../schema";
-import { sessionProcedure, router } from "../../trpc";
+import { publicProcedure, router } from "../../trpc";
 import {
   presignedUrlInputSchema,
   confirmUploadInputSchema,
 } from "@repo/validators";
 import { db } from "@repo/database";
 import { jobsTable, tempFilesTable } from "@repo/database/schema";
-import { getUploadPresignedUrl } from "@repo/storage";
+import { generateUploadPresignedUrl } from "@repo/storage";
 import { addPdfJob } from "@repo/queue";
 import type { JobType } from "@repo/validators";
 import { rateLimitMiddleware } from "../../middleware/auth";
 
 export const uploadRouter = router({
   /** Get a presigned URL for direct browser → R2 upload */
-  getPresignedUrl: sessionProcedure
+  getPresignedUrl: publicProcedure
     .use(rateLimitMiddleware("upload", 10, 100))
     .input(presignedUrlInputSchema)
     .mutation(async ({ input }) => {
       const key = `uploads/${Date.now()}-${Math.random().toString(36).slice(2)}/${input.filename}`;
 
-      const uploadUrl = await getUploadPresignedUrl(
+      const { uploadUrl } = await generateUploadPresignedUrl(
         key,
-        input.contentType,
-        input.fileSize,
-        300 // 5 min to upload
+        input.contentType
       );
 
       return { uploadUrl, key };
     }),
 
   /** After upload completes, confirm and create a processing job */
-  confirmUpload: sessionProcedure
+  confirmUpload: publicProcedure
     .use(rateLimitMiddleware("process", 20, 200))
     .input(confirmUploadInputSchema)
     .mutation(async ({ input, ctx }) => {
@@ -41,7 +39,7 @@ export const uploadRouter = router({
       const [job] = await db
         .insert(jobsTable)
         .values({
-          sessionId: ctx.sessionId,
+          sessionId: ctx.userId || "anonymous-" + Date.now().toString(),
           userId: ctx.userId || undefined,
           type: input.toolType as JobType,
           status: "pending",
@@ -59,7 +57,7 @@ export const uploadRouter = router({
       for (const key of input.keys) {
         await db.insert(tempFilesTable).values({
           jobId: job!.id,
-          storageKey: key,
+          azureBlobKey: key,
           filename: key.split("/").pop() || "unknown",
           mimeType: "application/octet-stream",
           sizeBytes: 0,
