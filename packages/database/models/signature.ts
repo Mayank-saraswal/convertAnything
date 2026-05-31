@@ -7,6 +7,7 @@ import {
   pgEnum,
   index,
   varchar,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { usersTable } from "./user";
 
@@ -75,7 +76,7 @@ export const signatureRequestsTable = pgTable(
     expiresAt: timestamp("expires_at").notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     oneTimeToken: text("one_time_token"),
-    tokenUsed: text("token_used").default(false),
+    tokenUsed: text("token_used").default("false"),
   },
   (table) => [
     index("idx_signature_requests_clerk_user_id").on(table.clerkUserId),

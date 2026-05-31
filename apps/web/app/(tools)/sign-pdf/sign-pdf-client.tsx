@@ -49,12 +49,15 @@ export function SignPdfClient({ tool }: SignPdfClientProps) {
       const presignData = await presignRes.json();
       const { uploadUrl, key } = presignData.result?.data || presignData;
 
-      // 2. Upload to storage
-      await fetch(uploadUrl, {
+      // 2. Upload to storage via API proxy (bypasses CORS)
+      const proxyUrl = apiUrl.replace("/trpc", "");
+      const proxyRes = await fetch(`${proxyUrl}/upload-proxy/${key}`, {
         method: "PUT",
         body: file,
         headers: { "Content-Type": file.type },
       });
+
+      if (!proxyRes.ok) throw new Error("Failed to upload file");
 
       // 3. Create signature request
       const requestRes = await requestSign.mutateAsync({

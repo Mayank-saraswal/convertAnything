@@ -2,10 +2,15 @@
 
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { trpc } from "~/lib/trpc";
+import { trpc } from "~/trpc/client";
 import { Loader2 } from "lucide-react";
 import { SignatureModal } from "./signature-modal";
-import { PdfViewer } from "./pdf-viewer";
+import dynamic from "next/dynamic";
+
+const PdfViewer = dynamic(() => import("./pdf-viewer").then((mod) => mod.PdfViewer), {
+  ssr: false,
+  loading: () => <div className="flex justify-center p-12"><Loader2 className="animate-spin h-8 w-8 text-muted-foreground" /></div>,
+});
 
 export function SignatureRoomClient({ requestId }: { requestId: string }) {
   const searchParams = useSearchParams();

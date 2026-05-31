@@ -23,7 +23,7 @@ export const saveSignatureInputSchema = z.object({
 export const requestSignInputSchema = z.object({
   documentBlobKey: z.string().min(1),
   signerEmail: z.string().email(),
-  placements: z.array(signaturePlacementSchema).min(1),
+  placements: z.array(signaturePlacementSchema).default([]),
   expiresAt: z.string().datetime().optional(),
 });
 

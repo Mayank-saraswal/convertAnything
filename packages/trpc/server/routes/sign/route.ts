@@ -18,6 +18,7 @@ import {
   generateDownloadPresignedUrl,
   uploadBlob,
   downloadBuffer,
+  copyObject,
 } from "@repo/storage";
 import { addPdfJob, getPdfQueue } from "@repo/queue";
 import { TRPCError } from "@trpc/server";
@@ -50,22 +51,23 @@ function hashBuffer(buffer: Buffer): string {
 }
 
 export const signRouter = router({
-  saveSignature: protectedProcedure
+  saveSignature: publicProcedure
     .input(saveSignatureInputSchema)
     .mutation(async ({ input, ctx }) => {
       try {
+        const userId = ctx.userId || "anonymous";
         const signatureBuffer = Buffer.from(
           input.signatureData.replace(/^data:image\/\w+;base64,/, ""),
           "base64"
         );
 
-        const blobKey = `signatures/${ctx.userId}/${randomUUID()}.png`;
+        const blobKey = `signatures/${userId}/${randomUUID()}.png`;
         await uploadBlob(blobKey, signatureBuffer, "image/png");
 
         const [signature] = await db
           .insert(signaturesTable)
           .values({
-            clerkUserId: ctx.userId,
+            clerkUserId: userId,
             name: input.name,
             signatureType: input.signatureType,
             signatureBlob: blobKey,
@@ -84,10 +86,11 @@ export const signRouter = router({
       }
     }),
 
-  requestSign: protectedProcedure
+  requestSign: publicProcedure
     .input(requestSignInputSchema)
     .mutation(async ({ input, ctx }) => {
       try {
+        const userId = ctx.userId || "anonymous";
         const oneTimeToken = generateOneTimeToken();
         const expiresAt = input.expiresAt
           ? new Date(input.expiresAt)
@@ -96,11 +99,14 @@ export const signRouter = router({
         const pdfBuffer = await downloadBuffer(input.documentBlobKey);
         const documentHash = hashBuffer(pdfBuffer);
 
+        const documentId = randomUUID();
+        await copyObject(input.documentBlobKey, `documents/${documentId}.pdf`);
+
         const [request] = await db
           .insert(signatureRequestsTable)
           .values({
-            documentId: randomUUID(),
-            clerkUserId: ctx.userId,
+            documentId,
+            clerkUserId: userId,
             signerEmail: input.signerEmail,
             placements: input.placements,
             expiresAt,
@@ -156,7 +162,7 @@ export const signRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: "Request has expired" });
         }
 
-        if (request.tokenUsed && input.token) {
+        if (request.tokenUsed === "true" && input.token) {
           throw new TRPCError({ code: "BAD_REQUEST", message: "Token already used" });
         }
 
@@ -243,7 +249,7 @@ export const signRouter = router({
             signedAt: new Date(),
             signatureId: input.signatureId,
             placements: input.placements,
-            tokenUsed: true,
+            tokenUsed: "true",
             auditLog: [
               ...(request.auditLog || []),
               {

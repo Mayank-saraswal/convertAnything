@@ -6,10 +6,11 @@ export const metadata: Metadata = {
   description: "Secure electronic document signing room.",
 };
 
-export default function SignatureRoomPage({
+export default async function SignatureRoomPage({
   params,
 }: {
-  params: { requestId: string };
+  params: Promise<{ requestId: string }>;
 }) {
-  return <SignatureRoomClient requestId={params.requestId} />;
+  const resolvedParams = await params;
+  return <SignatureRoomClient requestId={resolvedParams.requestId} />;
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { trpc } from "~/lib/trpc";
+import { trpc } from "~/trpc/client";
 import { SignaturePad } from "./signature-pad";
 
 export function SignatureModal({ onSave }: { onSave: (id: string, blob: string) => void }) {
